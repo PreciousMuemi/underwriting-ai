@@ -1,0 +1,140 @@
+{
+  "app": {
+    "title": "AutoUnderwriter",
+    "subtitle": "AI-Powered Insurance Risk Assessment"
+  },
+  "navigation": {
+    "home": "Home",
+    "quotes": "My Quotes",
+    "profile": "Profile",
+    "login": "Login",
+    "logout": "Logout",
+    "register": "Sign Up"
+  },
+  "auth": {
+    "login": {
+      "title": "Welcome Back",
+      "subtitle": "Sign in to your account",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Sign In",
+      "noAccount": "Don't have an account?",
+      "signUpLink": "Sign up here"
+    },
+    "register": {
+      "title": "Create Account",
+      "subtitle": "Join AutoUnderwriter today",
+      "name": "Full Name",
+      "email": "Email",
+      "password": "Password",
+      "confirmPassword": "Confirm Password",
+      "language": "Preferred Language",
+      "submit": "Create Account",
+      "hasAccount": "Already have an account?",
+      "signInLink": "Sign in here"
+    },
+    "errors": {
+      "invalidCredentials": "Invalid email or password",
+      "emailExists": "Email already exists",
+      "passwordMismatch": "Passwords don't match",
+      "weakPassword": "Password must be at least 6 characters",
+      "invalidEmail": "Please enter a valid email"
+    }
+  },
+  "chatbot": {
+    "title": "Get Your Insurance Quote",
+    "subtitle": "Answer a few questions to get your personalized quote",
+    "placeholder": "Type your answer here...",
+    "send": "Send",
+    "speak": "Speak",
+    "listening": "Listening...",
+    "stopListening": "Stop",
+    "voiceNotSupported": "Voice input not supported in this browser",
+    "nextQuestion": "Next Question",
+    "previousQuestion": "Previous",
+    "getQuote": "Get Quote",
+    "restart": "Start Over"
+  },
+  "questions": {
+    "age": "What is your age?",
+    "gender": "What is your gender? (M/F)",
+    "maritalStatus": "What is your marital status? (Single/Married/Divorced/Widowed)",
+    "education": "What is your education level? (High School/Bachelor/Master/PhD)",
+    "occupation": "What is your occupation?",
+    "income": "What is your annual income (in KES)?",
+    "homeValue": "What is your home value (in KES)?",
+    "carAge": "What is the age of your car (in years)?",
+    "carValue": "What is your car's blue book value (in KES)?",
+    "carType": "What type of car do you have?",
+    "isRedCar": "Is your car red? (Yes/No)",
+    "carUse": "How do you primarily use your car? (Commercial/Private)",
+    "travelTime": "How long is your daily commute (in minutes)?",
+    "urbanicity": "Do you live in an urban area? (Yes/No)",
+    "kidsAtHome": "How many children live at home?",
+    "kidsDriving": "How many of your children drive?",
+    "yearsOnJob": "How many years have you been at your current job?",
+    "parent1": "Are you a single parent? (Yes/No)",
+    "timeInForce": "How long have you had insurance (in years)?",
+    "claimFreq": "How many claims have you made in the past 5 years?",
+    "claimAmount": "What was the total amount of your previous claims (in KES)?",
+    "oldClaim": "What was the amount of your oldest claim (in KES)?",
+    "mvrPoints": "How many motor vehicle record points do you have?",
+    "revoked": "Has your license ever been revoked? (Yes/No)",
+    "creditScore": "What is your credit score? (Optional, 300-850)",
+    "speedingIncidents": "How many speeding incidents in the past year? (Optional)",
+    "harshBraking": "How many harsh braking events per month? (Optional)",
+    "aggressiveAcceleration": "How many aggressive acceleration events per month? (Optional)"
+  },
+  "results": {
+    "title": "Your Insurance Quote",
+    "riskLevel": "Risk Level",
+    "quoteAmount": "Quote Amount",
+    "quoteId": "Quote ID",
+    "generatedOn": "Generated on",
+    "actions": {
+      "emailQuote": "Email Quote",
+      "downloadPdf": "Download PDF",
+      "viewHistory": "View History",
+      "getNewQuote": "Get New Quote"
+    },
+    "emailSent": "Quote emailed successfully!",
+    "pdfGenerated": "PDF generated successfully!"
+  },
+  "profile": {
+    "title": "Profile Settings",
+    "personalInfo": "Personal Information",
+    "name": "Name",
+    "email": "Email",
+    "language": "Language Preference",
+    "save": "Save Changes",
+    "saved": "Profile updated successfully!"
+  },
+  "quotes": {
+    "title": "Quote History",
+    "noQuotes": "No quotes found",
+    "total": "Total Quotes",
+    "average": "Average Quote",
+    "lowest": "Lowest Quote",
+    "highest": "Highest Quote",
+    "riskDistribution": "Risk Distribution",
+    "viewDetails": "View Details",
+    "delete": "Delete",
+    "confirmDelete": "Are you sure you want to delete this quote?"
+  },
+  "languages": {
+    "en": "English",
+    "sw": "Swahili"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "retry": "Try Again",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "close": "Close",
+    "yes": "Yes",
+    "no": "No",
+    "currency": "KES"
+  }
+}

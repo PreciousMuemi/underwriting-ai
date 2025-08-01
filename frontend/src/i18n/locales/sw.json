@@ -1,0 +1,140 @@
+{
+  "app": {
+    "title": "AutoUnderwriter",
+    "subtitle": "Tathmini ya Hatari ya Bima kwa Akili Bandia"
+  },
+  "navigation": {
+    "home": "Nyumbani",
+    "quotes": "Nukuu Zangu",
+    "profile": "Wasifu",
+    "login": "Ingia",
+    "logout": "Toka",
+    "register": "Jisajili"
+  },
+  "auth": {
+    "login": {
+      "title": "Karibu Tena",
+      "subtitle": "Ingia kwenye akaunti yako",
+      "email": "Barua pepe",
+      "password": "Nywila",
+      "submit": "Ingia",
+      "noAccount": "Huna akaunti?",
+      "signUpLink": "Jisajili hapa"
+    },
+    "register": {
+      "title": "Tengeneza Akaunti",
+      "subtitle": "Jiunge na AutoUnderwriter leo",
+      "name": "Jina Kamili",
+      "email": "Barua pepe",
+      "password": "Nywila",
+      "confirmPassword": "Thibitisha Nywila",
+      "language": "Lugha Unayopendelea",
+      "submit": "Tengeneza Akaunti",
+      "hasAccount": "Tayari una akaunti?",
+      "signInLink": "Ingia hapa"
+    },
+    "errors": {
+      "invalidCredentials": "Barua pepe au nywila si sahihi",
+      "emailExists": "Barua pepe tayari ipo",
+      "passwordMismatch": "Nywila hazilingani",
+      "weakPassword": "Nywila lazima iwe na angalau herufi 6",
+      "invalidEmail": "Tafadhali ingiza barua pepe sahihi"
+    }
+  },
+  "chatbot": {
+    "title": "Pata Nukuu Yako ya Bima",
+    "subtitle": "Jibu maswali machache ili upate nukuu yako ya kibinafsi",
+    "placeholder": "Andika jibu lako hapa...",
+    "send": "Tuma",
+    "speak": "Sema",
+    "listening": "Ninasikiliza...",
+    "stopListening": "Acha",
+    "voiceNotSupported": "Ingizo la sauti halitumiki kwenye kivinjari hiki",
+    "nextQuestion": "Swali Linalofuata",
+    "previousQuestion": "Rudi",
+    "getQuote": "Pata Nukuu",
+    "restart": "Anza Upya"
+  },
+  "questions": {
+    "age": "Una umri gani?",
+    "gender": "Jinsia yako ni ipi? (M/K)",
+    "maritalStatus": "Hali yako ya ndoa ni ipi? (Sijaoa/Nimeoa/Tumeachana/Mjane)",
+    "education": "Kiwango chako cha elimu ni kipi? (Sekondari/Shahada/Uzamili/PhD)",
+    "occupation": "Kazi yako ni ipi?",
+    "income": "Kipato chako cha kila mwaka ni kiasi gani (kwa KES)?",
+    "homeValue": "Thamani ya nyumba yako ni kiasi gani (kwa KES)?",
+    "carAge": "Gari lako lina umri wa miaka mingapi?",
+    "carValue": "Thamani ya gari lako ni kiasi gani (kwa KES)?",
+    "carType": "Una aina gani ya gari?",
+    "isRedCar": "Gari lako ni jekundu? (Ndiyo/Hapana)",
+    "carUse": "Unatumia gari lako kwa ajili gani? (Biashara/Binafsi)",
+    "travelTime": "Safari yako ya kila siku ni dakika ngapi?",
+    "urbanicity": "Unaishi mjini? (Ndiyo/Hapana)",
+    "kidsAtHome": "Una watoto wangapi nyumbani?",
+    "kidsDriving": "Watoto wako wangapi wanaendesha gari?",
+    "yearsOnJob": "Umekuwa kazini mwako kwa miaka mingapi?",
+    "parent1": "Wewe ni mzazi pekee? (Ndiyo/Hapana)",
+    "timeInForce": "Umekuwa na bima kwa miaka mingapi?",
+    "claimFreq": "Umefanya madai mangapi katika miaka 5 iliyopita?",
+    "claimAmount": "Jumla ya madai yako ya awali ilikuwa kiasi gani (kwa KES)?",
+    "oldClaim": "Dai lako la zamani lilikuwa kiasi gani (kwa KES)?",
+    "mvrPoints": "Una pointi ngapi za rekodi ya gari?",
+    "revoked": "Leseni yako imewahi kuvunjwa? (Ndiyo/Hapana)",
+    "creditScore": "Alama zako za mkopo ni ngapi? (Si lazima, 300-850)",
+    "speedingIncidents": "Matukio ya kasi mangapi mwaka uliopita? (Si lazima)",
+    "harshBraking": "Matukio ya kubreki kwa nguvu kwa mwezi? (Si lazima)",
+    "aggressiveAcceleration": "Matukio ya kuongeza kasi kwa hasira kwa mwezi? (Si lazima)"
+  },
+  "results": {
+    "title": "Nukuu Yako ya Bima",
+    "riskLevel": "Kiwango cha Hatari",
+    "quoteAmount": "Kiasi cha Nukuu",
+    "quoteId": "Nambari ya Nukuu",
+    "generatedOn": "Imetengenezwa tarehe",
+    "actions": {
+      "emailQuote": "Tuma Nukuu kwa Barua pepe",
+      "downloadPdf": "Pakua PDF",
+      "viewHistory": "Ona Historia",
+      "getNewQuote": "Pata Nukuu Mpya"
+    },
+    "emailSent": "Nukuu imetumwa kwa barua pepe!",
+    "pdfGenerated": "PDF imetengenezwa!"
+  },
+  "profile": {
+    "title": "Mipangilio ya Wasifu",
+    "personalInfo": "Maelezo ya Kibinafsi",
+    "name": "Jina",
+    "email": "Barua pepe",
+    "language": "Lugha Unayopendelea",
+    "save": "Hifadhi Mabadiliko",
+    "saved": "Wasifu umesasishwa!"
+  },
+  "quotes": {
+    "title": "Historia ya Nukuu",
+    "noQuotes": "Hakuna nukuu zilizopatikana",
+    "total": "Nukuu zote",
+    "average": "Nukuu ya Wastani",
+    "lowest": "Nukuu ya Chini",
+    "highest": "Nukuu ya Juu",
+    "riskDistribution": "Mgawanyo wa Hatari",
+    "viewDetails": "Ona Maelezo",
+    "delete": "Futa",
+    "confirmDelete": "Una uhakika unataka kufuta nukuu hii?"
+  },
+  "languages": {
+    "en": "Kiingereza",
+    "sw": "Kiswahili"
+  },
+  "common": {
+    "loading": "Inapakia...",
+    "error": "Hitilafu imetokea",
+    "retry": "Jaribu Tena",
+    "cancel": "Ghairi",
+    "confirm": "Thibitisha",
+    "save": "Hifadhi",
+    "close": "Funga",
+    "yes": "Ndiyo",
+    "no": "Hapana",
+    "currency": "KES"
+  }
+}
