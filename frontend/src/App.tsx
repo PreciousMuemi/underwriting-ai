@@ -1,5 +1,5 @@
 import React, { Suspense } from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, Outlet } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from './contexts/AuthContext'
 
@@ -73,23 +73,23 @@ function App() {
 
           {/* Protected routes */}
           <Route
-            path="/*"
+            path="/"
             element={
               <ProtectedRoute>
                 <div className="min-h-screen bg-gray-50">
                   <Navbar />
                   <main className="container mx-auto px-4 py-8">
-                    <Routes>
-                      <Route path="/" element={<ChatbotInterface />} />
-                      <Route path="/quotes" element={<QuotesHistory />} />
-                      <Route path="/profile" element={<Profile />} />
-                      <Route path="*" element={<Navigate to="/" replace />} />
-                    </Routes>
+                    <Outlet />
                   </main>
                 </div>
               </ProtectedRoute>
             }
-          />
+          >
+            <Route index element={<ChatbotInterface />} />
+            <Route path="quotes" element={<QuotesHistory />} />
+            <Route path="profile" element={<Profile />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Route>
         </Routes>
       </Suspense>
     </div>

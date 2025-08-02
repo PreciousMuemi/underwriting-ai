@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import axios from 'axios';
+import axios, { type AxiosRequestConfig } from 'axios';
 
 interface User {
   id: number;
@@ -37,11 +37,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Logout function must be defined before use in interceptors
+  const logout = () => {
+    setUser(null);
+    setToken(null);
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('auth_user');
+  };
+
   // Setup axios interceptor for authentication
   useEffect(() => {
     const interceptor = axios.interceptors.request.use(
-      (config) => {
+      (config: import('axios').InternalAxiosRequestConfig) => {
         if (token) {
+          config.headers = config.headers || {};
           config.headers.Authorization = `Bearer ${token}`;
         }
         return config;
@@ -58,7 +67,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       (response) => response,
       (error) => {
         if (error.response?.status === 401 && token) {
-          // Token expired or invalid, logout user
           logout();
         }
         return Promise.reject(error);
@@ -156,13 +164,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const logout = () => {
-    setUser(null);
-    setToken(null);
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('auth_user');
   };
 
   const updateProfile = async (data: Partial<User>): Promise<{ success: boolean; error?: string }> => {

@@ -28,9 +28,6 @@
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
   body {
     @apply bg-background text-foreground;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
@@ -86,5 +83,12 @@ html {
 @layer utilities {
   .focus-ring {
     @apply focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+  }
+
+  .bg-background {
+    background-color: hsl(var(--background));
+  }
+  .text-foreground {
+    color: hsl(var(--foreground));
   }
 }
