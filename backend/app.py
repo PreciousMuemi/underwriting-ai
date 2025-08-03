@@ -14,11 +14,14 @@ mail = Mail()
 bcrypt = Bcrypt()
 
 def create_app(config_name='default'):
+    print(f"Creating app with config: {config_name}")
     app = Flask(__name__)
+    print("Flask app created")
     
     # Load configuration
     from .config import config
     app.config.from_object(config[config_name])
+    print("Configuration loaded")
     
     # Initialize extensions
     db.init_app(app)
@@ -27,6 +30,7 @@ def create_app(config_name='default'):
     mail.init_app(app)
     bcrypt.init_app(app)
     CORS(app)
+    print("Extensions initialized")
     
     # Register blueprints
     from .routes.auth import auth_bp
@@ -35,14 +39,36 @@ def create_app(config_name='default'):
     from .routes.email import email_bp
     from .routes.pdf import pdf_bp
     
+    print("Registering blueprints...")
     app.register_blueprint(auth_bp, url_prefix='/auth')
+    print("Registered auth blueprint")
+    
     app.register_blueprint(prediction_bp, url_prefix='/api')
+    print("Registered prediction blueprint")
+    
     app.register_blueprint(quotes_bp, url_prefix='/api')
+    print("Registered quotes blueprint")
+    
     app.register_blueprint(email_bp, url_prefix='/api')
+    print("Registered email blueprint")
+    
     app.register_blueprint(pdf_bp, url_prefix='/api')
+    print("Registered pdf blueprint")
+    
+    # Test route
+    @app.route('/')
+    def test_route():
+        return jsonify({'message': 'Test route working'})
+    
+    # Print all registered routes
+    print("All registered routes:")
+    for rule in app.url_map.iter_rules():
+        print(f"  {rule.rule} -> {rule.endpoint}")
     
     # Create database tables
     with app.app_context():
         db.create_all()
+    print("Database tables created")
     
+    print("App creation completed successfully")
     return app
