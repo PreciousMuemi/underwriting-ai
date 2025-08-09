@@ -116,7 +116,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ isOpen, onClose, onMinim
       
       if (result.status === 'success') {
         const riskText = result.risk_level.toLowerCase();
-        const quoteText = `Based on your profile, your risk level is **${result.risk_level}** and your personalized insurance quote is **KES ${result.quote.toLocaleString()}** per year. 🎉\n\nWould you like to proceed with this quote or get a new one?`;
+        const quoteText = `Based on your data, your predicted risk is ${riskText}. Your insurance quote is KES ${result.quote.toLocaleString()}.`;
         
         setTimeout(() => {
           addBotMessage(quoteText);
