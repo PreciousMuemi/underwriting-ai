@@ -9,6 +9,7 @@ import LoadingSpinner from './components/ui/LoadingSpinner'
 import LoginForm from './components/auth/LoginForm'
 import RegisterForm from './components/auth/RegisterForm'
 import ChatbotInterface from './components/ChatbotInterface'
+import ChatbotLauncher from './components/ChatbotLauncher'
 import QuotesHistory from './components/QuotesHistory'
 import Profile from './components/Profile'
 import LanguageToggle from './components/LanguageToggle'
@@ -81,19 +82,21 @@ function App() {
                   <main className="container mx-auto px-4 py-8">
                     <Outlet />
                   </main>
-                </div>
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<ChatbotInterface />} />
-            <Route path="quotes" element={<QuotesHistory />} />
-            <Route path="profile" element={<Profile />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Route>
-        </Routes>
-      </Suspense>
-    </div>
-  )
+                                 </div>
+               </ProtectedRoute>
+             }
+           >
+             <Route index element={<ChatbotInterface />} />
+             <Route path="quotes" element={<QuotesHistory />} />
+             <Route path="profile" element={<Profile />} />
+             <Route path="*" element={<Navigate to="/" replace />} />
+           </Route>
+         </Routes>
+         {/* Global floating chatbot */}
+         <ChatbotLauncher />
+       </Suspense>
+     </div>
+   )
 }
 
 export default App
