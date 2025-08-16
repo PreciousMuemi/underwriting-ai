@@ -4,6 +4,11 @@ from backend.app import db
 from backend.models.user import User
 from backend.models.quote import Quote
 from sqlalchemy import desc
+from backend.services.pricing_service import calculate_premium
+from backend.services.feature_mapping import extract_features
+import numpy as np
+import pickle
+import os
 
 quotes_bp = Blueprint('quotes', __name__)
 

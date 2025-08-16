@@ -52,7 +52,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   };
 
   const handleOptionClick = (option: { label: string; value: number }) => {
-    setInputValue(option.label);
+    // Clear any previous input to avoid setting text into numeric inputs on next question
+    setInputValue('');
     setError('');
     onSend(option.label, option.value);
   };

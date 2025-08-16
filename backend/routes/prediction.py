@@ -1,12 +1,14 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
+from flask_jwt_extended import jwt_required
 import pickle
 import numpy as np
-import pandas as pd
 import os
+import shap
 from backend.app import db
 from backend.models.user import User
 from backend.models.quote import Quote
+from backend.services.feature_mapping import extract_features, EXPECTED_FEATURES
+from backend.services.pricing_service import calculate_premium
 
 prediction_bp = Blueprint('prediction', __name__)
 
@@ -20,72 +22,9 @@ except Exception as e:
     print(f"❌ Error loading model: {e}")
     model = None
 
-def generate_enhanced_quote(risk_score, user_data, credit_score=None, driving_patterns=None):
-    """
-    Enhanced quote generation with additional risk factors
-    """
-    # Base premium (KES)
-    base_premium = 8000
-    
-    # Risk multipliers
-    if risk_score == 0:  # Low risk
-        risk_multiplier = 0.8
-    elif risk_score == 1:  # Medium risk
-        risk_multiplier = 1.2
-    else:  # High risk
-        risk_multiplier = 1.8
-    
-    # Age factor
-    age_factor = 1.0
-    if user_data.get('AGE', 25) < 25:
-        age_factor = 1.3  # Young drivers pay more
-    elif user_data.get('AGE', 25) > 50:
-        age_factor = 0.9  # Experienced drivers pay less
-    
-    # Car value factor
-    car_value = user_data.get('BLUEBOOK', 7000)
-    if car_value > 15000:
-        car_value_factor = 1.2
-    elif car_value < 5000:
-        car_value_factor = 0.9
-    else:
-        car_value_factor = 1.0
-    
-    # Previous claims factor
-    claims_factor = 1.0 + (user_data.get('CLM_FREQ', 0) * 0.2)
-    
-    # Credit score factor (new enhancement)
-    credit_factor = 1.0
-    if credit_score is not None:
-        if credit_score >= 750:
-            credit_factor = 0.9  # Excellent credit reduces premium
-        elif credit_score >= 650:
-            credit_factor = 1.0  # Good credit neutral
-        elif credit_score >= 550:
-            credit_factor = 1.1  # Fair credit increases premium
-        else:
-            credit_factor = 1.3  # Poor credit significantly increases premium
-    
-    # Driving patterns factor (new enhancement)
-    driving_factor = 1.0
-    if driving_patterns:
-        speeding_incidents = driving_patterns.get('speeding_incidents', 0)
-        harsh_braking = driving_patterns.get('harsh_braking_freq', 0)
-        aggressive_acceleration = driving_patterns.get('aggressive_acceleration', 0)
-        
-        # Each negative driving behavior adds to the factor
-        driving_factor += (speeding_incidents * 0.05)  # 5% per speeding incident
-        driving_factor += (harsh_braking * 0.03)       # 3% per harsh braking event
-        driving_factor += (aggressive_acceleration * 0.02)  # 2% per aggressive acceleration
-        
-        # Cap the driving factor at 1.5 (50% increase max)
-        driving_factor = min(driving_factor, 1.5)
-    
-    # Calculate final quote
-    quote = int(base_premium * risk_multiplier * age_factor * car_value_factor * 
-                claims_factor * credit_factor * driving_factor)
-    
-    return max(quote, 5000)  # Minimum premium of KES 5,000
+def _risk_level_from_score(score: int) -> str:
+    mapping = {0: 'Low', 1: 'Medium', 2: 'High'}
+    return mapping.get(score, 'Unknown')
 
 @prediction_bp.route('/predict', methods=['POST'])
 def predict():
@@ -102,24 +41,10 @@ def predict():
         
         data = request.get_json()
         
-        # Define expected features in the correct order
-        features = [
-            'KIDSDRIV', 'BIRTH', 'AGE', 'HOMEKIDS', 'YOJ', 'INCOME', 'PARENT1',
-            'HOME_VAL', 'MSTATUS', 'GENDER', 'EDUCATION', 'OCCUPATION', 'TRAVTIME',
-            'CAR_USE', 'BLUEBOOK', 'TIF', 'CAR_TYPE', 'RED_CAR', 'OLDCLAIM',
-            'CLM_FREQ', 'REVOKED', 'MVR_PTS', 'CLM_AMT', 'CAR_AGE', 'URBANICITY'
-        ]
-        
-        # Extract features from the request data
-        feature_values = []
-        for feature in features:
-            if feature in data:
-                feature_values.append(data[feature])
-            else:
-                return jsonify({
-                    'error': f'Missing required field: {feature}',
-                    'status': 'error'
-                }), 400
+        # Extract & validate features
+        feature_values, missing = extract_features(data)
+        if missing:
+            return jsonify({'error': f"Missing required field(s): {', '.join(missing)}", 'status': 'error'}), 400
         
         # Convert to numpy array and reshape for prediction
         X = np.array(feature_values).reshape(1, -1)
@@ -127,24 +52,35 @@ def predict():
         # Make prediction
         risk_prediction = model.predict(X)[0]
         risk_score = int(risk_prediction)
+
+        # Confidence (best-effort)
+        confidence = None
+        try:
+            if hasattr(model, 'predict_proba'):
+                proba = model.predict_proba(X)
+                if proba is not None and len(proba.shape) == 2:
+                    confidence = float(np.max(proba[0]))
+        except Exception:
+            confidence = None
         
         # Extract enhanced risk factors if provided
         credit_score = data.get('credit_score')
         driving_patterns = data.get('driving_patterns')
         
-        # Generate enhanced quote
-        quote = generate_enhanced_quote(risk_score, data, credit_score, driving_patterns)
-        
-        # Risk level mapping
-        risk_levels = {0: 'Low', 1: 'Medium', 2: 'High'}
-        risk_level = risk_levels.get(risk_score, 'Unknown')
+        # Pricing engine breakdown
+        pricing = calculate_premium(risk_score, data, credit_score, driving_patterns)
+        quote = pricing['total']
+        risk_level = _risk_level_from_score(risk_score)
         
         response_data = {
             'risk_score': risk_score,
             'risk_level': risk_level,
             'quote': quote,
-            'status': 'success'
+            'status': 'success',
+            'pricing_breakdown': pricing['breakdown']
         }
+        if confidence is not None:
+            response_data['confidence'] = confidence
         
         # If user is authenticated, save quote to history
         try:
@@ -154,7 +90,7 @@ def predict():
             current_user_id = get_jwt_identity()
             
             if current_user_id:
-                user = User.query.get(current_user_id)
+                user = User.query.get(int(current_user_id))
                 if user:
                     # Save quote to database
                     quote_record = Quote(
@@ -192,3 +128,41 @@ def health_check():
         'model_loaded': model is not None,
         'service': 'prediction'
     })
+
+@prediction_bp.route('/risk/explain', methods=['POST'])
+def explain():
+    """Return SHAP explanations for a single payload."""
+    try:
+        if model is None:
+            return jsonify({'error': 'Model not loaded', 'status': 'error'}), 500
+        payload = request.get_json() or {}
+        values, missing = extract_features(payload)
+        if missing:
+            return jsonify({'error': f"Missing required field(s): {', '.join(missing)}", 'status': 'error'}), 400
+
+        X = np.array(values).reshape(1, -1)
+        explainer = shap.TreeExplainer(model)
+        shap_values = explainer.shap_values(X)
+        base_value = explainer.expected_value
+
+        # Handle multi-class vs single output
+        if isinstance(shap_values, list):
+            # pick the class with max predicted logit/score for simplicity
+            class_index = int(np.argmax([np.dot(sv, X[0]) for sv in shap_values]))
+            sv = shap_values[class_index][0]
+            base = base_value[class_index] if isinstance(base_value, (list, np.ndarray)) else base_value
+        else:
+            sv = shap_values[0]
+            base = base_value if not isinstance(base_value, (list, np.ndarray)) else float(base_value[0])
+
+        contribs = [{'feature': name, 'shap_value': float(val), 'abs': float(abs(val))}
+                    for name, val in zip(EXPECTED_FEATURES, sv)]
+        top = sorted(contribs, key=lambda x: x['abs'], reverse=True)[:5]
+
+        return jsonify({
+            'status': 'success',
+            'base_value': float(base),
+            'top_contributions': top
+        }), 200
+    except Exception as e:
+        return jsonify({'status': 'error', 'error': str(e)}), 500

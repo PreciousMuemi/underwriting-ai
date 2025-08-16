@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, jsonify
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -38,6 +38,7 @@ def create_app(config_name='default'):
     from .routes.quotes import quotes_bp
     from .routes.email import email_bp
     from .routes.pdf import pdf_bp
+    from .routes.conversation import conversation_bp
     
     print("Registering blueprints...")
     app.register_blueprint(auth_bp, url_prefix='/auth')
@@ -54,6 +55,9 @@ def create_app(config_name='default'):
     
     app.register_blueprint(pdf_bp, url_prefix='/api')
     print("Registered pdf blueprint")
+    
+    app.register_blueprint(conversation_bp, url_prefix='/api')
+    print("Registered conversation blueprint")
     
     # Test route
     @app.route('/')

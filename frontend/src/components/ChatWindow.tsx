@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
+import apiClient from '../lib/api/client';
 import { X, Minimize2, RotateCcw } from 'lucide-react';
 import { ChatBubble } from './ChatBubble';
 import { ChatInput } from './ChatInput';
 import { ChatMessage, InsuranceData, PredictionResponse } from '../types/insurance';
 import { insuranceQuestions } from '../data/questions';
-import { cn } from '../lib/utils';
+// import { cn } from '../lib/utils';
 
 interface ChatWindowProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ isOpen, onClose, onMinim
   const [isComplete, setIsComplete] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const isBotTyping = messages.some(m => m.sender === 'bot' && m.isTyping);
 
   useEffect(() => {
     if (isOpen && messages.length === 0) {
@@ -104,19 +106,45 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ isOpen, onClose, onMinim
     setIsLoading(true);
     
     try {
-      const response = await fetch('http://127.0.0.1:5000/predict', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
+      // Build full model payload to satisfy backend EXPECTED_FEATURES
+      const year = new Date().getFullYear();
+      const modelPayload: Record<string, number> = {
+        KIDSDRIV: (data as any).KIDSDRIV ?? 0,
+        BIRTH: (data as any).BIRTH ?? ((data as any).AGE != null ? year - (data as any).AGE : 0),
+        AGE: (data as any).AGE ?? 0,
+        HOMEKIDS: (data as any).HOMEKIDS ?? 0,
+        YOJ: (data as any).YOJ ?? 0,
+        INCOME: (data as any).INCOME ?? 0,
+        PARENT1: (data as any).PARENT1 ?? 0,
+        HOME_VAL: (data as any).HOME_VAL ?? 0,
+        MSTATUS: (data as any).MSTATUS ?? 0,
+        GENDER: (data as any).GENDER ?? 0,
+        EDUCATION: (data as any).EDUCATION ?? 0,
+        OCCUPATION: (data as any).OCCUPATION ?? 0,
+        TRAVTIME: (data as any).TRAVTIME ?? 0,
+        CAR_USE: (data as any).CAR_USE ?? 0,
+        BLUEBOOK: (data as any).BLUEBOOK ?? 0,
+        TIF: (data as any).TIF ?? 0,
+        CAR_TYPE: (data as any).CAR_TYPE ?? 0,
+        RED_CAR: (data as any).RED_CAR ?? 0,
+        OLDCLAIM: (data as any).OLDCLAIM ?? 0,
+        CLM_FREQ: (data as any).CLM_FREQ ?? 0,
+        REVOKED: (data as any).REVOKED ?? 0,
+        MVR_PTS: (data as any).MVR_PTS ?? 0,
+        CLM_AMT: (data as any).CLM_AMT ?? 0,
+        CAR_AGE: (data as any).CAR_AGE ?? 0,
+        URBANICITY: (data as any).URBANICITY ?? 0,
+      };
 
-      const result: PredictionResponse = await response.json();
+      const { data: result } = await apiClient.post<PredictionResponse>('/api/predict', modelPayload, {
+        headers: { 'Content-Type': 'application/json' }
+      });
       
       if (result.status === 'success') {
         const riskText = result.risk_level.toLowerCase();
-        const quoteText = `Based on your data, your predicted risk is ${riskText}. Your insurance quote is KES ${result.quote.toLocaleString()}.`;
+        const conf = (result as any).confidence;
+        const confText = typeof conf === 'number' ? ` (confidence ${(conf * 100).toFixed(0)}%)` : '';
+        const quoteText = `Based on your data, your predicted risk is ${riskText}${confText}. Your insurance quote is KES ${result.quote.toLocaleString()}.`;
         
         setTimeout(() => {
           addBotMessage(quoteText);
@@ -126,9 +154,15 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ isOpen, onClose, onMinim
         addBotMessage("I'm sorry, there was an error calculating your quote. Please try again later.");
         setIsLoading(false);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Prediction error:', error);
-      addBotMessage("I'm having trouble connecting to our servers. Please check that the backend is running on http://127.0.0.1:5000 and try again.");
+      // Try to show backend-provided error details (e.g., missing fields)
+      const backendMsg = error?.response?.data?.error as string | undefined;
+      if (backendMsg) {
+        addBotMessage(`I couldn't calculate the quote: ${backendMsg}. Please review your answers and try again.`);
+      } else {
+        addBotMessage("I'm having trouble connecting to our servers. Please ensure the backend is running and try again.");
+      }
       setIsLoading(false);
     }
   };
@@ -198,12 +232,14 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ isOpen, onClose, onMinim
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
-      <ChatInput
-        currentQuestion={getCurrentQuestion()}
-        onSend={handleUserResponse}
-        disabled={isWaitingForResponse || isLoading}
-      />
+      {/* Input (hidden while bot is typing the question) */}
+      {!isBotTyping && (
+        <ChatInput
+          currentQuestion={getCurrentQuestion() as any}
+          onSend={handleUserResponse}
+          disabled={isWaitingForResponse || isLoading}
+        />
+      )}
 
       {/* Progress indicator */}
       {!isComplete && (

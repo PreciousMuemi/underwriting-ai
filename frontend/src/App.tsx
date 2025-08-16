@@ -13,6 +13,7 @@ import ChatbotLauncher from './components/ChatbotLauncher'
 import QuotesHistory from './components/QuotesHistory'
 import Profile from './components/Profile'
 import LanguageToggle from './components/LanguageToggle'
+import Landing from './pages/Landing'
 
 // Protected Route wrapper
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -72,9 +73,12 @@ function App() {
             }
           />
 
-          {/* Protected routes */}
+          {/* Public landing */}
+          <Route path="/" element={<Landing />} />
+
+          {/* Protected app area */}
           <Route
-            path="/"
+            path="/app"
             element={
               <ProtectedRoute>
                 <div className="min-h-screen bg-gray-50">
@@ -82,21 +86,21 @@ function App() {
                   <main className="container mx-auto px-4 py-8">
                     <Outlet />
                   </main>
-                                 </div>
-               </ProtectedRoute>
-             }
-           >
-             <Route index element={<ChatbotInterface />} />
-             <Route path="quotes" element={<QuotesHistory />} />
-             <Route path="profile" element={<Profile />} />
-             <Route path="*" element={<Navigate to="/" replace />} />
-           </Route>
-         </Routes>
-         {/* Global floating chatbot */}
-         <ChatbotLauncher />
-       </Suspense>
-     </div>
-   )
+                </div>
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<ChatbotInterface />} />
+            <Route path="quotes" element={<QuotesHistory />} />
+            <Route path="profile" element={<Profile />} />
+            <Route path="*" element={<Navigate to="/app" replace />} />
+          </Route>
+        </Routes>
+        {/* Global floating chatbot */}
+        <ChatbotLauncher />
+      </Suspense>
+    </div>
+  )
 }
 
 export default App

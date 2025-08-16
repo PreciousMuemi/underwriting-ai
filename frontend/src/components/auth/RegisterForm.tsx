@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
 
 const RegisterForm: React.FC = () => {
+    const { register } = useAuth();
+  
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -15,7 +18,14 @@ const RegisterForm: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Add registration logic here
-    alert('Registration submitted');
+    register(formData.username, formData.email, formData.password)
+    .then((result) => {
+      if (result.success) {
+        alert('Registration successful');
+      } else {
+        alert(result.error);
+      }
+    })
   };
 
   return (
