@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import apiClient from '../lib/api/client';
+import { api as apiClient } from '../lib/api/client';
 import { X, Minimize2, RotateCcw } from 'lucide-react';
 import { ChatBubble } from './ChatBubble';
 import { ChatInput } from './ChatInput';
@@ -109,6 +109,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ isOpen, onClose, onMinim
       // Build full model payload to satisfy backend EXPECTED_FEATURES
       const year = new Date().getFullYear();
       const modelPayload: Record<string, number> = {
+        ID: (data as any).ID ?? 1,
         KIDSDRIV: (data as any).KIDSDRIV ?? 0,
         BIRTH: (data as any).BIRTH ?? ((data as any).AGE != null ? year - (data as any).AGE : 0),
         AGE: (data as any).AGE ?? 0,

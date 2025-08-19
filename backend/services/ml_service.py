@@ -24,6 +24,7 @@ class MLService:
     def validate_features(self, data: Dict[str, Any]) -> Tuple[bool, Optional[str]]:
         """Validate that all required features are present"""
         required_features = [
+            'ID',
             'KIDSDRIV', 'BIRTH', 'AGE', 'HOMEKIDS', 'YOJ', 'INCOME', 'PARENT1',
             'HOME_VAL', 'MSTATUS', 'GENDER', 'EDUCATION', 'OCCUPATION', 'TRAVTIME',
             'CAR_USE', 'BLUEBOOK', 'TIF', 'CAR_TYPE', 'RED_CAR', 'OLDCLAIM',
@@ -55,6 +56,7 @@ class MLService:
         try:
             # Extract features in the correct order
             features = [
+                'ID',
                 'KIDSDRIV', 'BIRTH', 'AGE', 'HOMEKIDS', 'YOJ', 'INCOME', 'PARENT1',
                 'HOME_VAL', 'MSTATUS', 'GENDER', 'EDUCATION', 'OCCUPATION', 'TRAVTIME',
                 'CAR_USE', 'BLUEBOOK', 'TIF', 'CAR_TYPE', 'RED_CAR', 'OLDCLAIM',

@@ -2,6 +2,7 @@ from typing import List, Tuple, Any, Dict
 
 # Single source of truth for model input order
 EXPECTED_FEATURES: List[str] = [
+    'ID',
     'KIDSDRIV', 'BIRTH', 'AGE', 'HOMEKIDS', 'YOJ', 'INCOME', 'PARENT1',
     'HOME_VAL', 'MSTATUS', 'GENDER', 'EDUCATION', 'OCCUPATION', 'TRAVTIME',
     'CAR_USE', 'BLUEBOOK', 'TIF', 'CAR_TYPE', 'RED_CAR', 'OLDCLAIM',
