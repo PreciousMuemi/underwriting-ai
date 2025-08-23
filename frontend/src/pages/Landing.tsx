@@ -3,10 +3,18 @@ import { ChatWindow } from '../components/ChatWindow'
 import { ChatbotFloat } from '../components/ChatbotFloat'
 import { Shield, Check, Users, Clock } from 'lucide-react'
 import '../App.css'
+import { useAuth } from '../contexts/AuthContext'
+import { useNavigate } from 'react-router-dom'
+import LoginForm from '../components/auth/LoginForm'
+import RegisterForm from '../components/auth/RegisterForm'
 
 const Landing: React.FC = () => {
   const [isChatOpen, setIsChatOpen] = useState(false)
   const [isChatMinimized, setIsChatMinimized] = useState(false)
+  const [showLoginModal, setShowLoginModal] = useState(false)
+  const [showRegisterModal, setShowRegisterModal] = useState(false)
+  const { isAuthenticated, logout } = useAuth()
+  const navigate = useNavigate()
 
   const handleChatToggle = () => {
     if (isChatMinimized) {
@@ -27,6 +35,11 @@ const Landing: React.FC = () => {
     setIsChatMinimized(true)
   }
 
+  const handleLogout = () => {
+    logout()
+    navigate('/')
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 to-secondary-50">
       {/* Header */}
@@ -42,13 +55,46 @@ const Landing: React.FC = () => {
                 <p className="text-sm text-gray-600">AI-Powered Insurance Assistant</p>
               </div>
             </div>
-            <button
-              onClick={handleChatToggle}
-              className="bg-primary-500 hover:bg-primary-600 text-white px-6 py-2 rounded-lg transition-colors duration-200 flex items-center space-x-2"
-            >
-              <Shield size={16} />
-              <span>Get Quote</span>
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleChatToggle}
+                className="bg-primary-500 hover:bg-primary-600 text-white px-6 py-2 rounded-lg transition-colors duration-200 flex items-center space-x-2"
+              >
+                <Shield size={16} />
+                <span>Get Quote</span>
+              </button>
+              {isAuthenticated ? (
+                <>
+                  <button
+                    onClick={() => navigate('/app/quotes')}
+                    className="border border-gray-300 hover:bg-gray-50 text-gray-800 px-4 py-2 rounded-lg transition-colors duration-200"
+                  >
+                    My Quotes
+                  </button>
+                  <button
+                    onClick={handleLogout}
+                    className="border border-gray-300 hover:bg-gray-50 text-gray-800 px-4 py-2 rounded-lg transition-colors duration-200"
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => setShowLoginModal(true)}
+                    className="border border-gray-300 hover:bg-gray-50 text-gray-800 px-4 py-2 rounded-lg transition-colors duration-200"
+                  >
+                    Login
+                  </button>
+                  <button
+                    onClick={() => setShowRegisterModal(true)}
+                    className="border border-gray-300 hover:bg-gray-50 text-gray-800 px-4 py-2 rounded-lg transition-colors duration-200"
+                  >
+                    Sign Up
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </header>
@@ -161,6 +207,34 @@ const Landing: React.FC = () => {
         onClose={handleChatClose}
         onMinimize={handleChatMinimize}
       />
+
+      {/* Auth Modals */}
+      {showLoginModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 relative w-full max-w-md">
+            <button
+              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+              onClick={() => setShowLoginModal(false)}
+            >
+              ✕
+            </button>
+            <LoginForm />
+          </div>
+        </div>
+      )}
+      {showRegisterModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 relative w-full max-w-md">
+            <button
+              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+              onClick={() => setShowRegisterModal(false)}
+            >
+              ✕
+            </button>
+            <RegisterForm />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

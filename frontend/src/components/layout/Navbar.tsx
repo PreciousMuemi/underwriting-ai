@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const Navbar: React.FC = () => {
   return (
@@ -7,9 +8,9 @@ const Navbar: React.FC = () => {
         <div className="text-xl font-bold">AutoUnderwriter</div>
         <div>
           {/* Add navigation links here */}
-          <a href="/" className="mr-4 text-gray-700 hover:text-gray-900">Home</a>
-          <a href="/profile" className="mr-4 text-gray-700 hover:text-gray-900">Profile</a>
-          <a href="/quotes" className="text-gray-700 hover:text-gray-900">Quotes</a>
+          <Link to="/app" className="mr-4 text-gray-700 hover:text-gray-900">Home</Link>
+          <Link to="/app/profile" className="mr-4 text-gray-700 hover:text-gray-900">Profile</Link>
+          <Link to="/app/quotes" className="text-gray-700 hover:text-gray-900">Quotes</Link>
         </div>
       </div>
     </nav>

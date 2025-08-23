@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import verify_jwt_in_request, get_jwt_identity
 import pickle
 import numpy as np
 import os
@@ -9,6 +9,8 @@ from backend.models.user import User
 from backend.models.quote import Quote
 from backend.services.feature_mapping import extract_features, EXPECTED_FEATURES
 from backend.services.pricing_service import calculate_premium
+from backend.routes.email import send_quote_email
+from backend.routes.pdf import create_quote_pdf
 
 prediction_bp = Blueprint('prediction', __name__)
 
@@ -29,10 +31,17 @@ def _risk_level_from_score(score: int) -> str:
 @prediction_bp.route('/predict', methods=['POST'])
 def predict():
     """
-    Make insurance prediction - works with or without authentication
-    If authenticated, saves quote to user's history
+    Make insurance prediction - AUTH REQUIRED.
+    Saves quote to user's history and can email it (optionally attaching a PDF).
+    Request body supports flags:
+      - email_send: bool (default True)
+      - attach_pdf: bool (default False)
     """
     try:
+        # Enforce authentication for demo: no unauthenticated quotes
+        verify_jwt_in_request()
+        current_user_id = get_jwt_identity()
+
         if model is None:
             return jsonify({
                 'error': 'Model not loaded',
@@ -40,6 +49,7 @@ def predict():
             }), 500
         
         data = request.get_json()
+        data = data or {}
         
         # Extract & validate features
         feature_values, missing = extract_features(data)
@@ -82,35 +92,54 @@ def predict():
         if confidence is not None:
             response_data['confidence'] = confidence
         
-        # If user is authenticated, save quote to history
-        try:
-            # Check if request has JWT token (optional)
-            from flask_jwt_extended import verify_jwt_in_request, get_jwt_identity
-            verify_jwt_in_request(optional=True)
-            current_user_id = get_jwt_identity()
-            
-            if current_user_id:
-                user = User.query.get(int(current_user_id))
-                if user:
-                    # Save quote to database
-                    quote_record = Quote(
-                        user_id=user.id,
-                        input_data=data,
-                        risk_score=risk_score,
-                        risk_level=risk_level,
-                        quote_amount=quote,
-                        credit_score=credit_score,
-                        driving_patterns=driving_patterns
-                    )
-                    db.session.add(quote_record)
+        # Save quote to authenticated user's history and optionally email/PDF
+        user = User.query.get(int(current_user_id))
+        if not user:
+            return jsonify({'error': 'User not found', 'status': 'error'}), 404
+
+        email_send = bool(data.get('email_send', True))
+        attach_pdf = bool(data.get('attach_pdf', False))
+
+        # Save quote to database
+        quote_record = Quote(
+            user_id=user.id,
+            input_data=data,
+            risk_score=risk_score,
+            risk_level=risk_level,
+            quote_amount=quote,
+            credit_score=credit_score,
+            driving_patterns=driving_patterns
+        )
+        db.session.add(quote_record)
+        db.session.commit()
+
+        response_data['quote_id'] = quote_record.id
+        response_data['saved_to_history'] = True
+
+        # Optionally generate PDF and send email
+        pdf_path = None
+        if attach_pdf:
+            try:
+                pdf_path = create_quote_pdf(user, quote_record, user.language_preference)
+                if pdf_path:
+                    quote_record.pdf_generated = True
+                    quote_record.pdf_path = pdf_path
                     db.session.commit()
-                    
-                    response_data['quote_id'] = quote_record.id
-                    response_data['saved_to_history'] = True
-        except Exception as e:
-            # JWT verification failed or user not found - continue without saving
-            print(f"Note: Could not save to user history: {e}")
-            response_data['saved_to_history'] = False
+                    response_data['pdf_generated'] = True
+                else:
+                    response_data['pdf_generated'] = False
+            except Exception as e:
+                print(f"PDF generation failed: {e}")
+                response_data['pdf_generated'] = False
+
+        if email_send:
+            try:
+                # extend email helper to attach pdf when available
+                success = send_quote_email(user, quote_record, user.language_preference, attachment_path=pdf_path)
+                response_data['email_sent'] = bool(success)
+            except Exception as e:
+                print(f"Email send failed: {e}")
+                response_data['email_sent'] = False
         
         return jsonify(response_data)
         

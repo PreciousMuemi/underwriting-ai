@@ -11,7 +11,7 @@ from backend.models.user import User
 from backend.models.quote import Quote
 import os
 import tempfile
-from datetime import datetime
+from datetime import datetime, timedelta
 
 pdf_bp = Blueprint('pdf', __name__)
 
@@ -93,10 +93,11 @@ def create_quote_pdf(user, quote, language='en'):
         story.append(Spacer(1, 20))
         
         # Quote information table
+        valid_until_dt = quote.created_at + timedelta(days=30)
         quote_data = [
             [quote_id_label, str(quote.id)],
             [generated_on, quote.created_at.strftime('%B %d, %Y at %I:%M %p')],
-            [valid_until, (quote.created_at.replace(day=quote.created_at.day + 30)).strftime('%B %d, %Y')]
+            [valid_until, valid_until_dt.strftime('%B %d, %Y')]
         ]
         
         quote_table = Table(quote_data, colWidths=[2*inch, 3*inch])
@@ -152,7 +153,7 @@ def create_quote_pdf(user, quote, language='en'):
         risk_table = Table(risk_data, colWidths=[2*inch, 3*inch])
         risk_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f3f4f6')),
-            ('BACKGROUND', (1, 0), (1, 0), risk_color.clone(alpha=0.3)),
+            ('BACKGROUND', (1, 0), (1, 0), risk_color),
             ('BACKGROUND', (1, 1), (1, 1), colors.HexColor('#dcfce7')),
             ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
@@ -217,7 +218,7 @@ def generate_quote_pdf(quote_id):
     """Generate PDF for a specific quote"""
     try:
         current_user_id = get_jwt_identity()
-        user = User.query.get(current_user_id)
+        user = User.query.get(int(current_user_id))
         
         if not user:
             return jsonify({'error': 'User not found'}), 404
@@ -254,7 +255,7 @@ def download_quote_pdf(quote_id):
     """Download PDF for a specific quote"""
     try:
         current_user_id = get_jwt_identity()
-        user = User.query.get(current_user_id)
+        user = User.query.get(int(current_user_id))
         
         if not user:
             return jsonify({'error': 'User not found'}), 404
@@ -292,7 +293,7 @@ def download_latest_quote_pdf():
     """Download PDF for the most recent quote"""
     try:
         current_user_id = get_jwt_identity()
-        user = User.query.get(current_user_id)
+        user = User.query.get(int(current_user_id))
         
         if not user:
             return jsonify({'error': 'User not found'}), 404

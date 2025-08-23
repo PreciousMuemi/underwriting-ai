@@ -5,6 +5,7 @@ from backend.app import db, mail
 from backend.models.user import User
 from backend.models.quote import Quote
 import threading
+import os
 
 email_bp = Blueprint('email', __name__)
 
@@ -16,7 +17,7 @@ def send_async_email(app, msg):
         except Exception as e:
             print(f"Error sending email: {e}")
 
-def send_quote_email(user, quote, language='en'):
+def send_quote_email(user, quote, language='en', attachment_path: str | None = None):
     """Send quote email to user"""
     try:
         # Email content based on language
@@ -61,6 +62,18 @@ AutoUnderwriter Team
             recipients=[user.email],
             body=email_body
         )
+        # Attach PDF if provided and exists
+        try:
+            if attachment_path and os.path.exists(attachment_path):
+                with open(attachment_path, 'rb') as f:
+                    data = f.read()
+                msg.attach(
+                    filename=os.path.basename(attachment_path),
+                    content_type='application/pdf',
+                    data=data
+                )
+        except Exception as e:
+            print(f"Warning: could not attach PDF: {e}")
         
         # Send email in background thread
         thread = threading.Thread(

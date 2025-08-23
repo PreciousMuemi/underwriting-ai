@@ -17,6 +17,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   register: (name: string, email: string, password: string, language?: string) => Promise<{ success: boolean; error?: string }>;
+  ensure: (payload?: { email?: string; name?: string; language_preference?: string }) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   updateProfile: (data: Partial<User>) => Promise<{ success: boolean; error?: string }>;
   loading: boolean;
@@ -113,7 +114,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     try {
       setLoading(true);
-      const response = await axios.post('/auth/login', { email, password });
+      const response = await axios.post<{ user: User; access_token: string }>('/auth/login', { email, password });
       
       const { user: userData, access_token } = response.data;
       
@@ -127,6 +128,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return { success: true };
     } catch (error: any) {
       const errorMessage = error.response?.data?.error || 'Login failed';
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const ensure = async (
+    payload?: { email?: string; name?: string; language_preference?: string }
+  ): Promise<{ success: boolean; error?: string }> => {
+    try {
+      setLoading(true);
+      const response = await axios.post<{ user: User; access_token: string }>(
+        '/auth/ensure',
+        payload || {}
+      );
+      const { user: userData, access_token } = response.data;
+      setUser(userData);
+      setToken(access_token);
+      localStorage.setItem('auth_token', access_token);
+      localStorage.setItem('auth_user', JSON.stringify(userData));
+      return { success: true };
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || 'Ensure failed';
       return { success: false, error: errorMessage };
     } finally {
       setLoading(false);
@@ -189,6 +213,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isAuthenticated: !!user && !!token,
     login,
     register,
+    ensure,
     logout,
     updateProfile,
     loading

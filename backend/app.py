@@ -38,7 +38,9 @@ def create_app(config_name='default'):
     from .routes.quotes import quotes_bp
     from .routes.email import email_bp
     from .routes.pdf import pdf_bp
+    from .routes.tts import tts_bp
     from .routes.conversation import conversation_bp
+    from .routes.debug import debug_bp
     
     print("Registering blueprints...")
     app.register_blueprint(auth_bp, url_prefix='/auth')
@@ -59,6 +61,12 @@ def create_app(config_name='default'):
     app.register_blueprint(conversation_bp, url_prefix='/api')
     print("Registered conversation blueprint")
     
+    app.register_blueprint(debug_bp, url_prefix='/api')
+    print("Registered debug blueprint")
+    
+    app.register_blueprint(tts_bp, url_prefix='/api')
+    print("Registered tts blueprint")
+    
     # Test route
     @app.route('/')
     def test_route():
@@ -76,3 +84,9 @@ def create_app(config_name='default'):
     
     print("App creation completed successfully")
     return app
+
+# Do NOT create the app at module import time; create it when running directly.
+if __name__ == "__main__":
+    app = create_app()
+    print("Starting app via direct run (create_app called)...")
+    app.run(host="127.0.0.1", port=5000, debug=True)

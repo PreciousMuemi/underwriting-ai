@@ -1,11 +1,10 @@
 from flask import Blueprint, request, jsonify
-from uuid import uuid4
 from datetime import datetime
+from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request, exceptions as jwt_exceptions
+from backend.app import db
+from backend.models.conversation import Conversation
 
 conversation_bp = Blueprint('conversation', __name__)
-
-# In-memory store for demo; replace with DB for production
-_CONV_STORE: dict[str, dict] = {}
 
 DEFAULT_QUESTIONS = [
     {'field': 'AGE', 'question': 'What is your age?', 'type': 'number'},
@@ -14,25 +13,38 @@ DEFAULT_QUESTIONS = [
 ]
 
 
-def _new_session(initial: dict | None = None) -> dict:
-    return {
-        'id': str(uuid4()),
-        'created_at': datetime.utcnow().isoformat(),
-        'updated_at': datetime.utcnow().isoformat(),
-        'index': 0,
-        'data': initial or {},
-        'questions': DEFAULT_QUESTIONS,
-        'status': 'in_progress'
-    }
+def _try_get_user_id() -> int | None:
+    """Return user id if a valid JWT is present; otherwise None (anonymous session)."""
+    try:
+        verify_jwt_in_request(optional=True)
+        uid = get_jwt_identity()
+        return int(uid) if uid is not None else None
+    except jwt_exceptions.NoAuthorizationError:
+        return None
+    except Exception:
+        return None
 
 
 @conversation_bp.route('/conversation/start', methods=['POST'])
 def start():
     payload = request.get_json(silent=True) or {}
-    session = _new_session(payload.get('prefill'))
-    _CONV_STORE[session['id']] = session
-    next_q = session['questions'][0] if session['questions'] else None
-    return jsonify({'conversation_id': session['id'], 'next_question': next_q, 'state': session}), 200
+    prefill = payload.get('prefill') or {}
+
+    user_id = _try_get_user_id()
+    conv = Conversation(
+        user_id=user_id,
+        data=prefill,
+        questions=DEFAULT_QUESTIONS,
+        index=0,
+        status='in_progress',
+        created_at=datetime.utcnow(),
+        updated_at=datetime.utcnow(),
+    )
+    db.session.add(conv)
+    db.session.commit()
+
+    next_q = conv.questions[0] if conv.questions else None
+    return jsonify({'conversation_id': conv.id, 'next_question': next_q, 'state': conv.to_dict()}), 200
 
 
 @conversation_bp.route('/conversation/respond', methods=['POST'])
@@ -41,31 +53,40 @@ def respond():
     conv_id = data.get('conversation_id')
     answer = data.get('answer')
 
-    if not conv_id or conv_id not in _CONV_STORE:
+    if not conv_id:
+        return jsonify({'error': 'conversation_id is required'}), 400
+
+    conv: Conversation | None = Conversation.query.get(conv_id)
+    if not conv:
         return jsonify({'error': 'Invalid conversation_id'}), 400
 
-    session = _CONV_STORE[conv_id]
-    idx = session['index']
-    if idx >= len(session['questions']):
-        session['status'] = 'completed'
-        return jsonify({'message': 'Conversation already completed', 'state': session}), 200
+    idx = conv.index
+    if idx >= len(conv.questions or []):
+        conv.status = 'completed'
+        db.session.commit()
+        return jsonify({'message': 'Conversation already completed', 'state': conv.to_dict()}), 200
 
     # Save answer
-    field = session['questions'][idx]['field']
-    session['data'][field] = answer
-    session['index'] += 1
-    session['updated_at'] = datetime.utcnow().isoformat()
+    field = (conv.questions or [])[idx]['field']
+    data_map = conv.data or {}
+    data_map[field] = answer
+    conv.data = data_map
+    conv.index = idx + 1
+    conv.updated_at = datetime.utcnow()
 
-    if session['index'] < len(session['questions']):
-        next_q = session['questions'][session['index']]
-        return jsonify({'next_question': next_q, 'state': session}), 200
+    if conv.index < len(conv.questions or []):
+        next_q = conv.questions[conv.index]
+        db.session.commit()
+        return jsonify({'next_question': next_q, 'state': conv.to_dict()}), 200
 
-    session['status'] = 'ready_for_risk'
-    return jsonify({'message': 'Collected required info', 'state': session}), 200
+    conv.status = 'ready_for_risk'
+    db.session.commit()
+    return jsonify({'message': 'Collected required info', 'state': conv.to_dict()}), 200
 
 
 @conversation_bp.route('/conversation/status/<conv_id>', methods=['GET'])
 def status(conv_id: str):
-    if conv_id not in _CONV_STORE:
+    conv: Conversation | None = Conversation.query.get(conv_id)
+    if not conv:
         return jsonify({'error': 'Not found'}), 404
-    return jsonify({'state': _CONV_STORE[conv_id]}), 200
+    return jsonify({'state': conv.to_dict()}), 200

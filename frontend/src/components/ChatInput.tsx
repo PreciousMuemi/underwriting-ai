@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Send } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Send, Mic, Square } from 'lucide-react';
 import { QuestionConfig } from '../types/insurance';
 import { cn } from '../lib/utils';
 
@@ -16,6 +16,47 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 }) => {
   const [inputValue, setInputValue] = useState('');
   const [error, setError] = useState('');
+  const [listening, setListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
+
+  useEffect(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      const recog = new SpeechRecognition();
+      recog.lang = 'en-US';
+      recog.interimResults = true;
+      recog.continuous = false;
+      recog.onresult = (event: any) => {
+        const transcript = Array.from(event.results)
+          .map((r: any) => r[0])
+          .map((r: any) => r.transcript)
+          .join('');
+        setInputValue(transcript);
+      };
+      recog.onend = () => setListening(false);
+      recog.onerror = () => setListening(false);
+      recognitionRef.current = recog;
+    }
+  }, []);
+
+  const startListening = () => {
+    if (recognitionRef.current && !listening && !disabled) {
+      setError('');
+      setListening(true);
+      try {
+        recognitionRef.current.start();
+      } catch (_) {
+        setListening(false);
+      }
+    }
+  };
+
+  const stopListening = () => {
+    if (recognitionRef.current && listening) {
+      recognitionRef.current.stop();
+      setListening(false);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,17 +74,19 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       }
       numericValue = selectedOption.value;
       displayText = selectedOption.label;
-    } else {
+    } else if (currentQuestion.type === 'number') {
       numericValue = parseFloat(inputValue);
       if (isNaN(numericValue)) {
         setError('Please enter a valid number');
         return;
       }
-      
       if (currentQuestion.validation && !currentQuestion.validation(numericValue)) {
         setError(currentQuestion.errorMessage || 'Invalid input');
         return;
       }
+    } else {
+      // Free-text questions (e.g., auth name/email/password) — don't enforce numeric parsing
+      numericValue = 0;
     }
     
     setError('');
@@ -87,7 +130,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       ) : (
         <form onSubmit={handleSubmit} className="flex gap-2">
           <input
-            type={currentQuestion.type === 'number' ? 'number' : 'text'}
+            type={(String(currentQuestion.field) === 'AUTH_PASSWORD') ? 'password' : (currentQuestion.type === 'number' ? 'number' : 'text')}
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             placeholder="Type your answer..."
@@ -98,6 +141,19 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               "disabled:opacity-50 disabled:cursor-not-allowed"
             )}
           />
+          <button
+            type="button"
+            onClick={listening ? stopListening : startListening}
+            disabled={disabled}
+            className={cn(
+              "px-3 py-3 border border-gray-300 rounded-lg",
+              listening ? "bg-red-50 text-red-600 border-red-300" : "bg-white text-gray-700 hover:bg-gray-50",
+              "disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+            )}
+            title={listening ? 'Stop voice input' : 'Speak your answer'}
+          >
+            {listening ? <Square size={18} /> : <Mic size={18} />}
+          </button>
           <button
             type="submit"
             disabled={disabled || !inputValue.trim()}
