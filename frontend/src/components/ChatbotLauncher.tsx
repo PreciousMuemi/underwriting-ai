@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { ChatbotFloat } from './ChatbotFloat'
 import { ChatWindow } from './ChatWindow'
 
@@ -14,6 +14,28 @@ const ChatbotLauncher: React.FC = () => {
     setIsOpen(true)
     setIsMinimized(false)
   }
+
+  // Auto-open when returning from KYC or other flows that set a flag
+  useEffect(() => {
+    try {
+      const flag = localStorage.getItem('openChatOnReturn')
+      if (flag === '1') {
+        setIsOpen(true)
+        setIsMinimized(false)
+        localStorage.removeItem('openChatOnReturn')
+      }
+    } catch {}
+  }, [])
+
+  // Also support a direct event to open the chat
+  useEffect(() => {
+    const handler = () => {
+      setIsOpen(true)
+      setIsMinimized(false)
+    }
+    window.addEventListener('open-floating-chat', handler as EventListener)
+    return () => window.removeEventListener('open-floating-chat', handler as EventListener)
+  }, [])
 
   return (
     <>

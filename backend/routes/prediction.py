@@ -8,6 +8,8 @@ from backend.app import db
 from backend.models.user import User
 from backend.models.quote import Quote
 from backend.services.feature_mapping import extract_features, EXPECTED_FEATURES
+from backend.services.validators import validate_motor_payload, compute_vehicle_age
+from backend.services.reference.loader import get_motor_reference
 from backend.services.pricing_service import calculate_premium
 from backend.routes.email import send_quote_email
 from backend.routes.pdf import create_quote_pdf
@@ -51,7 +53,7 @@ def predict():
         data = request.get_json()
         data = data or {}
         
-        # Extract & validate features
+        # Extract & validate model features
         feature_values, missing = extract_features(data)
         if missing:
             return jsonify({'error': f"Missing required field(s): {', '.join(missing)}", 'status': 'error'}), 400
@@ -92,6 +94,11 @@ def predict():
         if confidence is not None:
             response_data['confidence'] = confidence
         
+        # Validate motor payload (controlled vocabs, add-ons, limits)
+        ok, details = validate_motor_payload(data)
+        if not ok:
+            return jsonify({'error': 'Invalid motor payload', 'details': details, 'status': 'error'}), 400
+
         # Save quote to authenticated user's history and optionally email/PDF
         user = User.query.get(int(current_user_id))
         if not user:
@@ -99,6 +106,22 @@ def predict():
 
         email_send = bool(data.get('email_send', True))
         attach_pdf = bool(data.get('attach_pdf', False))
+
+        # Compute pre-issuance flags from reference rules
+        ref = get_motor_reference()
+        rules = ref.get('issuance_rules', {})
+        cov = data.get('cover_type')
+        # Valuation for cover types
+        val_rule = rules.get('valuation', {})
+        valuation_required = bool(cov in set(val_rule.get('required_for_cover_types', [])))
+        # Mechanical assessment by vehicle age
+        mech_rule = rules.get('mechanical_assessment', {})
+        min_age = mech_rule.get('min_age')
+        veh_age = compute_vehicle_age(data.get('coverage') or {})
+        mechanical_assessment_required = bool(isinstance(min_age, int) and min_age > 0 and veh_age >= min_age)
+        # expose in response
+        response_data['valuation_required'] = valuation_required
+        response_data['mechanical_assessment_required'] = mechanical_assessment_required
 
         # Save quote to database
         quote_record = Quote(
@@ -108,7 +131,15 @@ def predict():
             risk_level=risk_level,
             quote_amount=quote,
             credit_score=credit_score,
-            driving_patterns=driving_patterns
+            driving_patterns=driving_patterns,
+            # motor snapshot
+            vehicle_category=data.get('vehicle_category'),
+            cover_type=data.get('cover_type'),
+            add_ons=data.get('add_ons') or [],
+            term_months=int(data.get('term_months', 12)),
+            kyc_status='pending',
+            valuation_required=valuation_required,
+            mechanical_assessment_required=mechanical_assessment_required
         )
         db.session.add(quote_record)
         db.session.commit()

@@ -1,0 +1,66 @@
+{
+  "vehicle_categories": ["Private", "Commercial", "PSV", "Motorcycles", "Special"],
+  "cover_types": ["TPO", "TPFT", "Comprehensive"],
+  "terms": [1, 3, 6, 12],
+  "addons": {
+    "windscreen": {
+      "label": "Windscreen",
+      "allowed_cover_types": ["Comprehensive", "TPFT"],
+      "requires_amount": true,
+      "limits": { "type": "percent_of_vehicle_value", "min_pct": 0.5, "max_pct": 10.0 }
+    },
+    "excess_protector": {
+      "label": "Excess protector",
+      "allowed_cover_types": ["Comprehensive"],
+      "requires_amount": false,
+      "rating_impact": { "type": "percent_of_premium", "value_pct": 5.0 }
+    },
+    "pvt": {
+      "label": "Political Violence & Terrorism (PV&T)",
+      "allowed_cover_types": ["Comprehensive", "TPFT"],
+      "requires_amount": false
+    },
+    "loss_of_use": {
+      "label": "Loss of Use",
+      "allowed_cover_types": ["Comprehensive"],
+      "allowed_categories": ["Private"],
+      "requires_amount": false
+    },
+    "personal_accident": {
+      "label": "Personal Accident (Driver/Occupants)",
+      "allowed_cover_types": ["Comprehensive", "TPFT", "TPO"],
+      "requires_amount": false
+    },
+    "road_rescue": {
+      "label": "Road Rescue/AA Assistance",
+      "allowed_cover_types": ["Comprehensive", "TPFT", "TPO"],
+      "requires_amount": false
+    },
+    "entertainment_unit": {
+      "label": "Entertainment Unit",
+      "allowed_cover_types": ["Comprehensive", "TPFT"],
+      "requires_amount": true,
+      "limits": { "type": "percent_of_vehicle_value", "min_pct": 0.5, "max_pct": 10.0 }
+    },
+    "window_glass": {
+      "label": "Window Glass",
+      "allowed_cover_types": ["Comprehensive", "TPFT"],
+      "requires_amount": true,
+      "limits": { "type": "percent_of_vehicle_value", "min_pct": 0.5, "max_pct": 10.0 }
+    }
+    
+  },
+  "validation": {
+    "comprehensive_requires_vehicle_value": true,
+    "loss_of_use_allowed_categories": ["Private"]
+  },
+  "issuance_rules": {
+    "full_premium_before_issue": true,
+    "proposal_form_required": true,
+    "valuation": { "required_for_cover_types": ["Comprehensive"] },
+    "mechanical_assessment": { "min_age": 15 }
+  },
+  "kyc": {
+    "checklist": ["id_or_passport", "kra_pin", "logbook_or_import_docs", "address", "email", "phone"]
+  }
+}

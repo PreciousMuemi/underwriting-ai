@@ -14,6 +14,7 @@ import QuotesHistory from './components/QuotesHistory'
 import Profile from './components/Profile'
 import LanguageToggle from './components/LanguageToggle'
 import Landing from './pages/Landing'
+import KycPage from './pages/KycPage'
 import { ToastProvider } from './components/ui/Toast'
 
 // Protected Route wrapper
@@ -97,6 +98,7 @@ function App() {
               <Route index element={<ChatbotInterface />} />
               <Route path="quotes" element={<QuotesHistory />} />
               <Route path="profile" element={<Profile />} />
+              <Route path="kyc" element={<KycPage />} />
               <Route path="*" element={<Navigate to="/app" replace />} />
             </Route>
           </Routes>

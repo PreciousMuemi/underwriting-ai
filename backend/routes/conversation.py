@@ -90,3 +90,44 @@ def status(conv_id: str):
     if not conv:
         return jsonify({'error': 'Not found'}), 404
     return jsonify({'state': conv.to_dict()}), 200
+
+
+@conversation_bp.route('/conversation/message', methods=['POST'])
+def append_message():
+    """Append a chat message into Conversation.data.messages.
+    Body: { conversation_id: str, sender: 'user'|'bot', text: str }
+    Returns: { state }
+    """
+    body = request.get_json() or {}
+    conv_id = body.get('conversation_id')
+    sender = (body.get('sender') or '').strip()
+    text = (body.get('text') or '').strip()
+
+    if not conv_id:
+        return jsonify({'error': 'conversation_id is required'}), 400
+    if sender not in ('user', 'bot'):
+        return jsonify({'error': "sender must be 'user' or 'bot'"}), 400
+    if not text:
+        return jsonify({'error': 'text is required'}), 400
+
+    conv: Conversation | None = Conversation.query.get(conv_id)
+    if not conv:
+        return jsonify({'error': 'Invalid conversation_id'}), 400
+
+    # Ensure messages array exists in data
+    data_map = conv.data or {}
+    msgs = data_map.get('messages') or []
+    if not isinstance(msgs, list):
+        msgs = []
+
+    msgs.append({
+        'sender': sender,
+        'text': text,
+        'ts': datetime.utcnow().isoformat() + 'Z',
+    })
+    data_map['messages'] = msgs
+    conv.data = data_map
+    conv.updated_at = datetime.utcnow()
+    db.session.commit()
+
+    return jsonify({'state': conv.to_dict()}), 200

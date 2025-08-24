@@ -41,6 +41,9 @@ def create_app(config_name='default'):
     from .routes.tts import tts_bp
     from .routes.conversation import conversation_bp
     from .routes.debug import debug_bp
+    from .routes.policies import policies_bp
+    from .routes.users import users_bp
+    from .routes.reference import reference_bp
     
     print("Registering blueprints...")
     app.register_blueprint(auth_bp, url_prefix='/auth')
@@ -66,6 +69,13 @@ def create_app(config_name='default'):
     
     app.register_blueprint(tts_bp, url_prefix='/api')
     print("Registered tts blueprint")
+    
+    app.register_blueprint(policies_bp, url_prefix='/api')
+    print("Registered policies blueprint")
+    app.register_blueprint(reference_bp, url_prefix='/api')
+    print("Registered reference blueprint")
+    app.register_blueprint(users_bp, url_prefix='/api')
+    print("Registered users blueprint")
     
     # Test route
     @app.route('/')

@@ -110,7 +110,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       )}
       
       {currentQuestion.type === 'select' ? (
-        <div className="grid grid-cols-1 gap-2">
+        <div className="grid grid-cols-1 gap-2 max-h-60 overflow-y-auto pr-1">
           {currentQuestion.options?.map((option) => (
             <button
               key={option.value}
